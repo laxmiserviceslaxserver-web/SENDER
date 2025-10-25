@@ -18,8 +18,6 @@
             <tr><th>Name</th><th>Date & Time</th></tr>
         </table>
     </div>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
@@ -40,6 +38,9 @@ input, button {
     padding: 10px;
     margin: 5px 0;
 }
+button {
+    cursor: pointer;
+}
 table {
     width: 100%;
     border-collapse: collapse;
@@ -53,45 +54,32 @@ th, td {
 th {
     background-color: #f2f2f2;
 }
-// ====== Firebase Config ======
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-
-// ====== DOM Elements ======
 const form = document.getElementById('attendanceForm');
 const table = document.getElementById('attendanceTable');
 
-// ====== Load Attendance from Firebase ======
-function loadAttendance() {
-    database.ref('attendance').on('value', function(snapshot){
-        // Clear table except header
-        table.innerHTML = "<tr><th>Name</th><th>Date & Time</th></tr>";
-        snapshot.forEach(function(childSnapshot){
-            const data = childSnapshot.val();
-            const row = table.insertRow();
-            row.insertCell(0).innerText = data.name;
-            row.insertCell(1).innerText = data.datetime;
-        });
+// Load attendance from localStorage
+let attendanceList = JSON.parse(localStorage.getItem('attendance')) || [];
+
+// Function to display attendance
+function displayAttendance() {
+    table.innerHTML = "<tr><th>Name</th><th>Date & Time</th></tr>";
+    attendanceList.forEach(entry => {
+        const row = table.insertRow();
+        row.insertCell(0).innerText = entry.name;
+        row.insertCell(1).innerText = entry.datetime;
     });
 }
-loadAttendance();
 
-// ====== Add Attendance ======
-form.addEventListener('submit', function(e){
+// Display on page load
+displayAttendance();
+
+// Add attendance
+form.addEventListener('submit', function(e) {
     e.preventDefault();
     const name = document.getElementById('name').value;
     const datetime = new Date().toLocaleString();
-    const newAttendance = database.ref('attendance').push();
-    newAttendance.set({ name, datetime });
+    attendanceList.push({ name, datetime });
+    localStorage.setItem('attendance', JSON.stringify(attendanceList));
+    displayAttendance();
     form.reset();
 });
